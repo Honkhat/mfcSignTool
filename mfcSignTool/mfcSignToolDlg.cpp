@@ -109,10 +109,10 @@ BOOL CmfcSignToolDlg::OnInitDialog()
 	//初始化状态栏
 	m_bar.EnableAutomation();
 	m_bar.Create(WS_CHILD|WS_VISIBLE,CRect(0,0,0,0),this,0);
-	int nWidth[]={160,330,-1};
+	int nWidth[]={180,330,-1};
 	m_bar.SetParts(3,nWidth);
 	m_bar.SetText(L"网络状态: 是否与签名方建立连接",0,0);
-	m_bar.SetText(L"当前模式:",0,1);
+	m_bar.SetText(L"当前模式: 签名请求模式",0,1);
 	m_bar.SetText(L"本地IP: ",0,2);
 	//初始化按钮icon
 	m_hIconOn=AfxGetApp()->LoadIconW(IDI_ICON_ON);
@@ -190,6 +190,8 @@ HCURSOR CmfcSignToolDlg::OnQueryDragIcon()
 
 void CmfcSignToolDlg::OnBnClickedBtnSideAsk()
 {
+	//set bar
+	m_bar.SetText(L"当前模式: 签名请求模式",0,1);
 	//change icon
 	m_btnSideAsk.SetIcon(m_hIconOn);
 	m_btnSideSign.SetIcon(m_hIconOff);
@@ -203,6 +205,8 @@ void CmfcSignToolDlg::OnBnClickedBtnSideAsk()
 
 void CmfcSignToolDlg::OnBnClickedBtnSideSign()
 {
+	//set bar
+	m_bar.SetText(L"当前模式: 签名模式",0,1);
 	//change icon
 	m_btnSideAsk.SetIcon(m_hIconOff);
 	m_btnSideSign.SetIcon(m_hIconOn);
