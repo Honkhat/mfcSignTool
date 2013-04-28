@@ -6,6 +6,9 @@
 //hj added 2 child-style none-border dlgs
 #include "ClientDlg.h"
 #include "ServerDlg.h"
+//include winsock related files
+#include <WinSock2.h>
+#pragma comment(lib,"WS2_32.lib")
 
 // CmfcSignToolDlg ¶Ô»°¿ò
 class CmfcSignToolDlg : public CDialogEx
@@ -39,6 +42,10 @@ public:
 	CButton m_btnSideSign;
 	CClientDlg m_dlgClient;
 	CServerDlg m_dlgServer;
+
+	//local host name/ip
+	char m_szHostName[256];
+	char m_szHostIp[20];
 
 	afx_msg void OnBnClickedBtnSideAsk();
 	afx_msg void OnBnClickedBtnSideSign();

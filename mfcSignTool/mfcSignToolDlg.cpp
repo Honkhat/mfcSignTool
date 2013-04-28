@@ -106,14 +106,38 @@ BOOL CmfcSignToolDlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// 设置小图标
 
 	// TODO: 在此添加额外的初始化代码
+	//Initialize the winsock lib
+	WSADATA wsaData;
+	WORD sockVersion=MAKEWORD(2,0);
+	::WSAStartup(sockVersion,&wsaData);
+	
 	//初始化状态栏
 	m_bar.EnableAutomation();
 	m_bar.Create(WS_CHILD|WS_VISIBLE,CRect(0,0,0,0),this,0);
-	int nWidth[]={180,330,-1};
+	int nWidth[]={200,350,-1};
 	m_bar.SetParts(3,nWidth);
-	m_bar.SetText(L"网络状态: 是否与签名方建立连接",0,0);
-	m_bar.SetText(L"当前模式: 签名请求模式",0,1);
-	m_bar.SetText(L"本地IP: ",0,2);
+	m_bar.SetText(L"网络状态: 尚未与签名方建立连接",0,0);
+	m_bar.SetText(L"当前模式:  签名请求模式",0,1);
+	
+	//get local IP
+	memset(m_szHostName,0,256);
+	memset(m_szHostIp,0,20);
+	::gethostname(m_szHostName,256);
+	HOSTENT* pHostent=gethostbyname(m_szHostName);
+	if(pHostent!=NULL)
+	{
+		in_addr* addr=(in_addr*)*(pHostent->h_addr_list);
+		wchar_t wcHostIp[20]={0};
+		memcpy(m_szHostIp,inet_ntoa(addr[0]),20);
+		MultiByteToWideChar(CP_ACP,0,m_szHostIp,-1,wcHostIp,20);
+		CString csIp("本地IP:  ");
+		csIp+=wcHostIp;
+		m_bar.SetText(csIp,0,2);
+	}
+	else
+	{
+		m_bar.SetText(L"本地IP: 获取失败.",0,2);
+	}
 	//初始化按钮icon
 	m_hIconOn=AfxGetApp()->LoadIconW(IDI_ICON_ON);
 	m_hIconOff=AfxGetApp()->LoadIconW(IDI_ICON_OFF);
@@ -131,6 +155,9 @@ BOOL CmfcSignToolDlg::OnInitDialog()
 
 	m_dlgClient.ShowWindow(true);
 	m_dlgServer.ShowWindow(false);
+
+	//release winsock lib
+	::WSACleanup();
 
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }

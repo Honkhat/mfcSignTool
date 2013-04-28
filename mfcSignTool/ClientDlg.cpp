@@ -77,7 +77,7 @@ void CClientDlg::OnBnClickedRadioSend()
 	GetDlgItem(IDC_E_VERIFY)->EnableWindow(false);
 	GetDlgItem(IDC_E_VERIFY)->ShowWindow(false);
 	//enable and visible my-mode stuff
-	GetDlgItem(IDC_E_P)->ShowWindow(true);
+	GetDlgItem(IDC_E_PUB)->ShowWindow(true);
 	GetDlgItem(IDC_BTN_GETP)->EnableWindow(true);
 	GetDlgItem(IDC_BTN_GETP)->ShowWindow(true);
 	GetDlgItem(IDC_E_OPENFILE)->ShowWindow(true);
@@ -91,8 +91,8 @@ void CClientDlg::OnBnClickedRadioSend()
 void CClientDlg::OnBnClickedRadioRecv()
 {
 	//unenable and invisible the send-mode stuff
-	GetDlgItem(IDC_E_P)->EnableWindow(false);
-	GetDlgItem(IDC_E_P)->ShowWindow(false);
+	GetDlgItem(IDC_E_PUB)->EnableWindow(false);
+	GetDlgItem(IDC_E_PUB)->ShowWindow(false);
 	GetDlgItem(IDC_BTN_GETP)->EnableWindow(false);
 	GetDlgItem(IDC_BTN_GETP)->ShowWindow(false);
 	GetDlgItem(IDC_E_OPENFILE)->EnableWindow(false);
