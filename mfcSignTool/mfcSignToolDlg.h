@@ -10,6 +10,7 @@
 #include <WinSock2.h>
 #pragma comment(lib,"WS2_32.lib")
 
+
 // CmfcSignToolDlg 对话框
 class CmfcSignToolDlg : public CDialogEx
 {
@@ -42,6 +43,8 @@ public:
 	CButton m_btnSideSign;
 	CClientDlg m_dlgClient;
 	CServerDlg m_dlgServer;
+	//当前选择的模式
+	bool m_bSignMode;
 
 	//local host name/ip
 	char m_szHostName[256];
@@ -49,4 +52,6 @@ public:
 
 	afx_msg void OnBnClickedBtnSideAsk();
 	afx_msg void OnBnClickedBtnSideSign();
+	afx_msg void OnShutserv();
+	afx_msg void OnOpenserv();
 };

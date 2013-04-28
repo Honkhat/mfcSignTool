@@ -70,6 +70,8 @@ BEGIN_MESSAGE_MAP(CmfcSignToolDlg, CDialogEx)
 	ON_WM_QUERYDRAGICON()
 	ON_BN_CLICKED(IDC_BTN_SIDE_ASK, &CmfcSignToolDlg::OnBnClickedBtnSideAsk)
 	ON_BN_CLICKED(IDC_BTN_SIDE_SIGN, &CmfcSignToolDlg::OnBnClickedBtnSideSign)
+	ON_COMMAND(ID_SHUTSERV, &CmfcSignToolDlg::OnShutserv)
+	ON_COMMAND(ID_OPENSERV, &CmfcSignToolDlg::OnOpenserv)
 END_MESSAGE_MAP()
 
 
@@ -106,6 +108,9 @@ BOOL CmfcSignToolDlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// 设置小图标
 
 	// TODO: 在此添加额外的初始化代码
+	//Initialize the value of class members
+	m_bSignMode=false;
+
 	//Initialize the winsock lib
 	WSADATA wsaData;
 	WORD sockVersion=MAKEWORD(2,0);
@@ -114,9 +119,9 @@ BOOL CmfcSignToolDlg::OnInitDialog()
 	//初始化状态栏
 	m_bar.EnableAutomation();
 	m_bar.Create(WS_CHILD|WS_VISIBLE,CRect(0,0,0,0),this,0);
-	int nWidth[]={200,350,-1};
+	int nWidth[]={230,370,-1};
 	m_bar.SetParts(3,nWidth);
-	m_bar.SetText(L"网络状态: 尚未与签名方建立连接",0,0);
+	m_bar.SetText(L"输出信息:  (菜单相关)",0,0);
 	m_bar.SetText(L"当前模式:  签名请求模式",0,1);
 	
 	//get local IP
@@ -219,6 +224,7 @@ void CmfcSignToolDlg::OnBnClickedBtnSideAsk()
 {
 	//set bar
 	m_bar.SetText(L"当前模式: 签名请求模式",0,1);
+	m_bSignMode=false;
 	//change icon
 	m_btnSideAsk.SetIcon(m_hIconOn);
 	m_btnSideSign.SetIcon(m_hIconOff);
@@ -234,6 +240,7 @@ void CmfcSignToolDlg::OnBnClickedBtnSideSign()
 {
 	//set bar
 	m_bar.SetText(L"当前模式: 签名模式",0,1);
+	m_bSignMode=true;
 	//change icon
 	m_btnSideAsk.SetIcon(m_hIconOff);
 	m_btnSideSign.SetIcon(m_hIconOn);
@@ -242,4 +249,42 @@ void CmfcSignToolDlg::OnBnClickedBtnSideSign()
 	m_dlgClient.ShowWindow(false);
 	m_dlgServer.EnableWindow(true);
 	m_dlgServer.ShowWindow(true);
+}
+
+
+void CmfcSignToolDlg::OnShutserv()
+{
+	//call CServerDlg to shut service down
+	//首先判断服务是否开启
+	if(m_bSignMode && m_dlgServer.m_bService)
+	{
+		m_dlgServer.CloseAllSocket();
+		m_dlgServer.m_bService=false;
+		m_dlgServer.GetDlgItem(IDC_BTN_OPENSERV)->EnableWindow(true);
+	}
+	else
+		if(m_bSignMode)
+			m_bar.SetText(L"输出信息:  服务没有开启,谈何关闭.",0,0);
+		else
+			m_bar.SetText(L"输出信息:  当前模式不是签名模式,好么.",0,0);
+}
+
+
+void CmfcSignToolDlg::OnOpenserv()
+{
+	//first judge if service is ON
+	if(m_bSignMode && !m_dlgServer.m_bService)
+	{
+		//开启服务中的::listen()较慢,所以先执行按钮的disable.
+		m_dlgServer.m_bService=true;
+		m_dlgServer.GetDlgItem(IDC_BTN_OPENSERV)->EnableWindow(false);
+		m_dlgServer.OnBnClickedBtnOpenserv();
+	}
+	else
+	{
+		if(m_bSignMode)
+			m_bar.SetText(L"输出信息:  服务已经开启了,好么.",0,0);
+		else
+			m_bar.SetText(L"输出信息:  当前模式不是签名模式,好么.",0,0);
+	}
 }
