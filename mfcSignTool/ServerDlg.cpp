@@ -340,12 +340,12 @@ void CServerDlg::CloseAllSocket()
 
 void CServerDlg::OnBnClickedBtnRandgen()
 {
-	//randomly generate Key-Pair
-	//AutoSeededRandomPool prng;
-	//m_privKey.GenerateRandomWithKeySize(prng,m_nKeySize);
+	//--randomly generate Key-Pair
+	AutoSeededRandomPool prng;
+	m_privKey.GenerateRandomWithKeySize(prng,m_nKeySize);
     //---------------TEST,TEST-----------------------------------
-	Integer n("0xbeaadb3d839f3b5f"), e("0x11"), d("0x21a5ae37b9959db9");
-	m_privKey.Initialize(n, e, d);
+	//Integer n("0xbeaadb3d839f3b5f"), e("0x11"), d("0x21a5ae37b9959db9");
+	//m_privKey.Initialize(n, e, d);
 	//---------------TEST,TEST-----------------------------------
 	//grab the value
 	m_rsaE=m_privKey.GetPublicExponent();

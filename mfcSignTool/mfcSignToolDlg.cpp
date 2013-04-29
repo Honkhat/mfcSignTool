@@ -74,6 +74,12 @@ BEGIN_MESSAGE_MAP(CmfcSignToolDlg, CDialogEx)
 	ON_COMMAND(ID_OPENSERV, &CmfcSignToolDlg::OnOpenserv)
 	ON_COMMAND(ID_MENU_SHUTCONN, &CmfcSignToolDlg::OnMenuShutconn)
 	ON_COMMAND(ID_CONNSVR, &CmfcSignToolDlg::OnConnsvr)
+	ON_COMMAND(ID_MENU_OPENFILE, &CmfcSignToolDlg::OnMenuOpenfile)
+	ON_COMMAND(ID_MENU_OUTVAR, &CmfcSignToolDlg::OnMenuOutvar)
+	ON_COMMAND(ID_MENU_EXIT, &CmfcSignToolDlg::OnMenuExit)
+	ON_COMMAND(ID_MENU_ASKMODE, &CmfcSignToolDlg::OnMenuAskmode)
+	ON_COMMAND(ID_MENU_SIGN_MODE, &CmfcSignToolDlg::OnMenuSignMode)
+	ON_COMMAND(ID_MENU_DEMO, &CmfcSignToolDlg::OnMenuDemo)
 END_MESSAGE_MAP()
 
 
@@ -318,4 +324,95 @@ void CmfcSignToolDlg::OnConnsvr()
 		MessageBox(L"当前模式不是签名请求模式!",L"错误",MB_OK);
 	else if(m_dlgClient.m_bConnect)
 		MessageBox(L"已经与签名方建立了连接.",L"错误",MB_OK);
+}
+
+
+void CmfcSignToolDlg::OnMenuOpenfile()
+{
+	//PROXY
+	m_dlgClient.OnBnClickedBtnOpenfile();
+}
+
+
+void CmfcSignToolDlg::OnMenuOutvar()
+{
+	//E,D,N,P,Q;only for SERVER
+	if(!m_bSignMode)
+	{
+		MessageBox(L"只有签名方有权限导出参数!",L"错误",MB_OK);
+		return;
+	}
+	//导出参数到文件
+	wchar_t szSaveFile[MAX_PATH]={0};//这里需要获取要加密的文件名+“（加密）”
+	OPENFILENAME SaveFile={0};
+	SaveFile.lStructSize=sizeof(OPENFILENAME);
+	SaveFile.lpstrFile=szSaveFile;
+	SaveFile.nMaxFile=MAX_PATH;
+	SaveFile.lpstrFilter=L"Text Files(*.txt)\0*.txt\0All Files(*.*)\0*.*\0\0";
+	SaveFile.lpstrDefExt=L".txt";
+	SaveFile.nFilterIndex=1;
+	SaveFile.Flags=OFN_OVERWRITEPROMPT|OFN_CREATEPROMPT;
+	if(::GetSaveFileName(&SaveFile))
+	{
+		//首先判断是否可导出有效值
+		if(m_dlgServer.m_rsaE.IsZero()||m_dlgServer.m_rsaD.IsZero()||m_dlgServer.m_rsaN.IsZero())
+		{
+			MessageBox(L"密钥对(e,d)或其他参数为0!",L"错误",MB_OK);
+			return;
+		}
+		//将参数写入到文件
+		ofstream fout(szSaveFile,ios::out);
+		fout.clear();
+		fout<<"--------RSA Related-------------------\n";
+		fout<<"p: "<<hex<<m_dlgServer.m_rsaP<<"\n";
+		fout<<"q: "<<hex<<m_dlgServer.m_rsaQ<<"\n";
+		fout<<"n: "<<hex<<m_dlgServer.m_rsaN<<"\n";
+		fout<<"e: "<<hex<<m_dlgServer.m_rsaE<<"\n";
+		fout<<"d: "<<hex<<m_dlgServer.m_rsaD<<"\n";
+		fout<<"--------RSA Related-------------------\n";
+		fout.close();
+		MessageBox(L"导出参数成功!",L"提醒",MB_OK);
+	}
+}
+
+
+void CmfcSignToolDlg::OnMenuExit()
+{
+	CDialog::OnOK();
+}
+
+
+void CmfcSignToolDlg::OnMenuAskmode()
+{
+	OnBnClickedBtnSideAsk();
+}
+
+
+void CmfcSignToolDlg::OnMenuSignMode()
+{
+	OnBnClickedBtnSideSign();
+}
+
+
+void CmfcSignToolDlg::OnMenuDemo()
+{
+	//first check if mfcBlindSignP.exe EXISTS
+	fstream file("mfcBlindSignP.exe",ios::in);
+	if(!file)
+	{
+		MessageBox(L"没有找到原理演示工具!",L"错误",MB_OK);
+		return;
+	}
+	//system("mfcBlindSignP.exe");
+	SHELLEXECUTEINFO ShExecInfo;
+	ShExecInfo.cbSize = sizeof(SHELLEXECUTEINFO);
+	ShExecInfo.fMask = SEE_MASK_NOCLOSEPROCESS ;
+	ShExecInfo.hwnd = NULL;
+	ShExecInfo.lpVerb = NULL;
+	ShExecInfo.lpFile = L"mfcBlindSignP.exe"; //can be a file as well
+	ShExecInfo.lpParameters = L"";
+	ShExecInfo.lpDirectory = NULL;
+	ShExecInfo.nShow = SW_SHOW;
+	ShExecInfo.hInstApp = NULL;
+	ShellExecuteEx(&ShExecInfo);
 }

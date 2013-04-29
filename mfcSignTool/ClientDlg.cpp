@@ -437,5 +437,5 @@ void CClientDlg::OnBnClickedBtnVerify()
 		SetDlgItemText(IDC_E_VERIFY,L"身份验证成功,签名是有效的.");
 	}
 	else
-		SetDlgItemText(IDC_E_VERIFY,L"身份验证失败,签名是无效.");
+		SetDlgItemText(IDC_E_VERIFY,L"身份验证失败,签名无效.");
 }

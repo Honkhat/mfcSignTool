@@ -10,7 +10,9 @@
 //include winsock related files
 #include <WinSock2.h>
 #pragma comment(lib,"WS2_32.lib")
-
+//save arguments
+#include <ShlObj.h>
+#include <fstream>
 
 // CmfcSignToolDlg ¶Ô»°¿ò
 class CmfcSignToolDlg : public CDialogEx
@@ -58,4 +60,10 @@ public:
 	afx_msg void OnOpenserv();
 	afx_msg void OnMenuShutconn();
 	afx_msg void OnConnsvr();
+	afx_msg void OnMenuOpenfile();
+	afx_msg void OnMenuOutvar();
+	afx_msg void OnMenuExit();
+	afx_msg void OnMenuAskmode();
+	afx_msg void OnMenuSignMode();
+	afx_msg void OnMenuDemo();
 };
