@@ -34,6 +34,12 @@
     <None Include="res\off.ico">
       <Filter>资源文件</Filter>
     </None>
+    <None Include="res\icon1.ico">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="res\client.ico">
+      <Filter>资源文件</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="mfcSignTool.h">
@@ -57,6 +63,12 @@
     <ClInclude Include="ServerDlg.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="SignYonDlg.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ConnSvr.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="mfcSignTool.cpp">
@@ -72,6 +84,12 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="ServerDlg.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="SignYonDlg.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="ConnSvr.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

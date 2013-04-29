@@ -215,6 +215,8 @@ long CServerDlg::OnSocket(WPARAM wParam,LPARAM lParam)
 				::getpeername(s,(sockaddr*)&sinClient,&nSinLen);
 				//获取主机字节顺序的端口号
 				int nPeerPort=::ntohs(sinClient.sin_port);
+				char szPeerPort[10]={0};
+				itoa(nPeerPort,szPeerPort,10);//3rd:radix
 				//获取主机字节顺序的IP
 				char* pchPeerIp=new char[20];
 				pchPeerIp=::inet_ntoa(sinClient.sin_addr);
@@ -225,7 +227,12 @@ long CServerDlg::OnSocket(WPARAM wParam,LPARAM lParam)
 				char szHostName[50]={0};
 				memcpy(szHostName,pHost->h_name,50);
 				//popup the SignAgreeDlg and send these values to it
-				MessageBox(L"ask4sign",L"收到消息",MB_OK);
+				m_dlgSignYon.SetUiText(pchPeerIp,szPeerPort,szHostName,szText);
+				
+				if(IDOK == m_dlgSignYon.DoModal())
+				{
+					//sign the md5 and sendback
+				}
 			}
 		}
 		break;

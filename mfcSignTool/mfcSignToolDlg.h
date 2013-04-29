@@ -6,6 +6,7 @@
 //hj added 2 child-style none-border dlgs
 #include "ClientDlg.h"
 #include "ServerDlg.h"
+#include "ConnSvr.h"
 //include winsock related files
 #include <WinSock2.h>
 #pragma comment(lib,"WS2_32.lib")
@@ -43,6 +44,7 @@ public:
 	CButton m_btnSideSign;
 	CClientDlg m_dlgClient;
 	CServerDlg m_dlgServer;
+	CConnSvr m_dlgConnSvr;
 	//当前选择的模式
 	bool m_bSignMode;
 
@@ -54,4 +56,6 @@ public:
 	afx_msg void OnBnClickedBtnSideSign();
 	afx_msg void OnShutserv();
 	afx_msg void OnOpenserv();
+	afx_msg void OnMenuShutconn();
+	afx_msg void OnConnsvr();
 };

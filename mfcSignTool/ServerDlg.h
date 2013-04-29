@@ -4,6 +4,8 @@
 #pragma comment(lib,"WS2_32.lib")
 #define MAX_SOCKET 56
 
+#include "SignYonDlg.h"
+
 // CServerDlg ¶Ô»°¿ò
 
 class CServerDlg : public CDialogEx
@@ -22,6 +24,7 @@ protected:
 
 	DECLARE_MESSAGE_MAP()
 public:
+	CSignYonDlg m_dlgSignYon;
 	//the maximum num of clients allowed(m_nMaxSocket<MAX_SOCKET !)
 	unsigned int m_nMaxSocket;
 	//the backlog

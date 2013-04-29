@@ -96,6 +96,8 @@
   <ItemGroup>
     <None Include="cover.bmp" />
     <None Include="ReadMe.txt" />
+    <None Include="res\client.ico" />
+    <None Include="res\icon1.ico" />
     <None Include="res\mfcSignTool.ico" />
     <None Include="res\mfcSignTool.rc2" />
     <None Include="res\off.ico" />
@@ -104,18 +106,22 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ClientDlg.h" />
+    <ClInclude Include="ConnSvr.h" />
     <ClInclude Include="mfcSignTool.h" />
     <ClInclude Include="mfcSignToolDlg.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="ServerDlg.h" />
+    <ClInclude Include="SignYonDlg.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ClientDlg.cpp" />
+    <ClCompile Include="ConnSvr.cpp" />
     <ClCompile Include="mfcSignTool.cpp" />
     <ClCompile Include="mfcSignToolDlg.cpp" />
     <ClCompile Include="ServerDlg.cpp" />
+    <ClCompile Include="SignYonDlg.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>

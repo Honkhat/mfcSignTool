@@ -72,6 +72,8 @@ BEGIN_MESSAGE_MAP(CmfcSignToolDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BTN_SIDE_SIGN, &CmfcSignToolDlg::OnBnClickedBtnSideSign)
 	ON_COMMAND(ID_SHUTSERV, &CmfcSignToolDlg::OnShutserv)
 	ON_COMMAND(ID_OPENSERV, &CmfcSignToolDlg::OnOpenserv)
+	ON_COMMAND(ID_MENU_SHUTCONN, &CmfcSignToolDlg::OnMenuShutconn)
+	ON_COMMAND(ID_CONNSVR, &CmfcSignToolDlg::OnConnsvr)
 END_MESSAGE_MAP()
 
 
@@ -275,10 +277,9 @@ void CmfcSignToolDlg::OnOpenserv()
 	//first judge if service is ON
 	if(m_bSignMode && !m_dlgServer.m_bService)
 	{
-		//开启服务中的::listen()较慢,所以先执行按钮的disable.
-		m_dlgServer.m_bService=true;
-		m_dlgServer.GetDlgItem(IDC_BTN_OPENSERV)->EnableWindow(false);
+		//don't forget to set m_bService
 		m_dlgServer.OnBnClickedBtnOpenserv();
+		m_dlgServer.m_bService=true;
 	}
 	else
 	{
@@ -287,4 +288,32 @@ void CmfcSignToolDlg::OnOpenserv()
 		else
 			m_bar.SetText(L"输出信息:  当前模式不是签名模式,好么.",0,0);
 	}
+}
+
+
+void CmfcSignToolDlg::OnMenuShutconn()
+{
+	//shut the connection down(works for client/SideAsk mode)
+	if(!m_bSignMode)
+		m_dlgClient.ShutConn();
+	else
+		m_bar.SetText(L"输出信息:  当前模式是签名模式,好么.",0,0);
+}
+
+
+void CmfcSignToolDlg::OnConnsvr()
+{
+	//first judge the current mode
+	if(!m_bSignMode && !m_dlgClient.m_bConnect)
+	{
+		//pop up the ConnSvr dlg
+		if(IDOK == m_dlgConnSvr.DoModal())
+		{
+			m_dlgClient.CreateAndConn(m_dlgConnSvr.m_szIpSvr,m_dlgConnSvr.m_nPort);
+		}
+	}
+	else if(m_bSignMode)
+		MessageBox(L"当前模式不是签名请求模式!",L"错误",MB_OK);
+	else if(m_dlgClient.m_bConnect)
+		MessageBox(L"已经与签名方建立了连接.",L"错误",MB_OK);
 }
