@@ -5,6 +5,7 @@
 #include "mfcSignTool.h"
 #include "ServerDlg.h"
 #include "afxdialogex.h"
+
 //hj added
 //self define msg_id (>WM_USER)
 #define WM_SOCKET WM_USER+3
@@ -37,6 +38,7 @@ BEGIN_MESSAGE_MAP(CServerDlg, CDialogEx)
 	//--hj added manually--
 	ON_MESSAGE(WM_SOCKET,OnSocket)
 	//--hj added manually--
+	ON_BN_CLICKED(IDC_BTN_RANDGEN, &CServerDlg::OnBnClickedBtnRandgen)
 END_MESSAGE_MAP()
 
 
@@ -45,35 +47,41 @@ END_MESSAGE_MAP()
 
 void CServerDlg::OnBnClickedBtnOpenserv()
 {
-	//大前提:服务没有开启(!Vital!)
-	if(!m_bService)
+	//First check if the Key-Pair is generated
+	if(!m_rsaE.IsZero())
 	{
-		//Disabled.保证在整个软件活动期间，只开启服务一次;同时菜单中相同功能的按钮也Disabled(由于在父层次需要点击触发).
-		GetDlgItem(IDC_BTN_OPENSERV)->EnableWindow(false);
-		m_barServer.SetText(L"网络状态:  正在开启服务..",0,0);
-
-		//start service
-		//Guarantee this work only once
-		if(m_sockServer == INVALID_SOCKET)
+		//大前提:服务没有开启(!Vital!)
+		if(!m_bService)
 		{
-			//jude if m_nPort is legal(<1024 is NOT recommended)
-			if(m_nPort<1024 || m_nPort>65535)
+			//Disabled.保证在整个软件活动期间，只开启服务一次;同时菜单中相同功能的按钮也Disabled(由于在父层次需要点击触发).
+			GetDlgItem(IDC_BTN_OPENSERV)->EnableWindow(false);
+			m_barServer.SetText(L"网络状态:  正在开启服务..",0,0);
+
+			//start service
+			//Guarantee this work only once
+			if(m_sockServer == INVALID_SOCKET)
 			{
-				MessageBox(L"端口号错误!( --有效值范围:(1024,65535) )",L"错误",MB_OK);
-				return;
+				//jude if m_nPort is legal(<1024 is NOT recommended)
+				if(m_nPort<1024 || m_nPort>65535)
+				{
+					MessageBox(L"端口号错误!( --有效值范围:(1024,65535) )",L"错误",MB_OK);
+					return;
+				}
+				//create a socket and listen
+				if(!CreateAndListen(m_nPort))
+				{
+					MessageBox(L"开启服务出错!",L"错误",MB_OK);
+					return;
+				}
+				//设置相关窗口控件
+				//extern CmfcSignToolDlg::CStatusBarCtrl m_bar;
+				m_barServer.SetText(L"网络状态:  正在服务中..",0,0);
+				m_bService=true;
 			}
-			//create a socket and listen
-			if(!CreateAndListen(m_nPort))
-			{
-				MessageBox(L"开启服务出错!",L"错误",MB_OK);
-				return;
-			}
-			//设置相关窗口控件
-			//extern CmfcSignToolDlg::CStatusBarCtrl m_bar;
-			m_barServer.SetText(L"网络状态:  正在服务中..",0,0);
-			m_bService=true;
 		}
 	}
+	else
+		MessageBox(L"您还没有配置密钥!",L"错误",MB_OK);
 }
 
 
@@ -89,6 +97,12 @@ BOOL CServerDlg::OnInitDialog()
 	m_nPort=12345;
 	m_nClient=0;
 	m_bService=false;
+	//-----RSA related begin----
+	m_nKeySize=128;
+	memset(m_szE,0,MAX_INT_DIGITS);
+	memset(m_szN,0,MAX_INT_DIGITS);
+
+	//-----RSA related end------
 
 	//Initialize the winsock lib
 	WSADATA wsaData;
@@ -203,10 +217,15 @@ long CServerDlg::OnSocket(WPARAM wParam,LPARAM lParam)
 			//判断消息类型: ask4e or ask4sign
 			if(strncmp(szText,"ask4e\r\n",6)==0)
 			{
-				//sendback e
-				MessageBox(L"ask4e",L"收到消息",MB_OK);
+				//sendback (e,n);Format: backe:(+m_szE)
+				memset(szText,0,1024);
+				strncat(szText,"backe:",6);
+				strncat(szText,m_szE,MAX_INT_DIGITS);
+				strncat(szText,"\r\n",2);
+				strncat(szText,m_szN,MAX_INT_DIGITS);
+				::send(s,szText,1024,0);
 			}
-			else if(strcmp(szText,"ask4sign\r\n")==0)
+			else if(strncmp(szText,"ask4sign",8)==0)
 			{
 				//peer对方的IP、端口号、主机名
 				sockaddr_in sinClient;
@@ -226,12 +245,27 @@ long CServerDlg::OnSocket(WPARAM wParam,LPARAM lParam)
 				HOSTENT* pHost=::gethostbyaddr((LPSTR)&dwIp,4,AF_INET);
 				char szHostName[50]={0};
 				memcpy(szHostName,pHost->h_name,50);
+				//process szText: wipe out "ask4sign"
+				char* pszText=szText;
+				pszText=&szText[8];
 				//popup the SignAgreeDlg and send these values to it
-				m_dlgSignYon.SetUiText(pchPeerIp,szPeerPort,szHostName,szText);
+				m_dlgSignYon.SetUiText(pchPeerIp,szPeerPort,szHostName,pszText);
 				
 				if(IDOK == m_dlgSignYon.DoModal())
 				{
 					//sign the md5 and sendback
+					Integer mb(pszText);
+					Integer ss=a_exp_b_mod_c(mb,m_rsaD,m_rsaN);
+					//Integer-->char
+					stringstream sstream;
+					char szText[1024]={0};
+					char szTmp[512]={0};
+					sstream<<hex<<ss;
+					sstream>>szTmp;
+					//padding szText;Format: backsign:(+sign)
+					strncat(szText,"backsign:",10);
+					strncat(szText,szTmp,512);
+					::send(s,szText,1024,0);
 				}
 			}
 		}
@@ -295,8 +329,52 @@ void CServerDlg::CloseAllSocket()
 		//更新client总数
 		m_nClient=0;
 		//更新相关控件状态
-		m_barServer.SetText(L"网络状态:  停止服务",0,0);
-		GetDlgItem(IDC_BTN_OPENSERV)->EnableWindow(true);
+		if(m_barServer)//如果Client Server同时打开着关闭，就会出现m_barServer已经释放的情况。这里中断。
+		{
+			m_barServer.SetText(L"网络状态:  停止服务",0,0);
+			GetDlgItem(IDC_BTN_OPENSERV)->EnableWindow(true);
+		}
 		m_bService=false;
 	}
+}
+
+void CServerDlg::OnBnClickedBtnRandgen()
+{
+	//randomly generate Key-Pair
+	//AutoSeededRandomPool prng;
+	//m_privKey.GenerateRandomWithKeySize(prng,m_nKeySize);
+    //---------------TEST,TEST-----------------------------------
+	Integer n("0xbeaadb3d839f3b5f"), e("0x11"), d("0x21a5ae37b9959db9");
+	m_privKey.Initialize(n, e, d);
+	//---------------TEST,TEST-----------------------------------
+	//grab the value
+	m_rsaE=m_privKey.GetPublicExponent();
+	m_rsaD=m_privKey.GetPrivateExponent();
+	m_rsaN=m_privKey.GetModulus();
+	m_rsaP=m_privKey.GetPrime1();
+	m_rsaQ=m_privKey.GetPrime2();
+	//UpdateData(false)
+	wchar_t wszTmp[MAX_INT_DIGITS]={0};
+	char szTmp[MAX_INT_DIGITS]={0};
+	stringstream sstream;
+	sstream<<hex<<m_rsaE;
+	sstream>>m_szE;
+	//didn't use szTmp
+	MultiByteToWideChar(CP_ACP,0,m_szE,-1,wszTmp,MAX_INT_DIGITS);
+	SetDlgItemText(IDC_E_PUB,wszTmp);
+
+	sstream.clear();
+	memset(szTmp,0,MAX_INT_DIGITS);
+	memset(wszTmp,0,MAX_INT_DIGITS);
+	sstream<<hex<<m_rsaD;
+	sstream>>szTmp;
+	MultiByteToWideChar(CP_ACP,0,szTmp,-1,wszTmp,MAX_INT_DIGITS);
+	SetDlgItemText(IDC_E_PRIV,wszTmp);
+	//get m_szN
+	sstream.clear();
+	memset(m_szN,0,MAX_INT_DIGITS);
+	sstream<<hex<<m_rsaN;
+	sstream>>m_szN;
+	//disable the KEY-GEN btn
+	GetDlgItem(IDC_BTN_RANDGEN)->EnableWindow(false);
 }

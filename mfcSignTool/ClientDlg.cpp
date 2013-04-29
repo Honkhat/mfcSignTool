@@ -7,6 +7,7 @@
 #include "afxdialogex.h"
 //hj added
 #define WM_SOCKET WM_USER+5
+//global variables
 
 // CClientDlg 对话框
 
@@ -39,6 +40,9 @@ BEGIN_MESSAGE_MAP(CClientDlg, CDialogEx)
 	//---hj added manually----
 	ON_BN_CLICKED(IDC_BTN_GETP, &CClientDlg::OnBnClickedBtnGetp)
 	ON_BN_CLICKED(IDC_BTN_ASK, &CClientDlg::OnBnClickedBtnAsk)
+	ON_BN_CLICKED(IDC_BTN_OPENFILE, &CClientDlg::OnBnClickedBtnOpenfile)
+	ON_BN_CLICKED(IDC_BTN_UNBLIND, &CClientDlg::OnBnClickedBtnUnblind)
+	ON_BN_CLICKED(IDC_BTN_VERIFY, &CClientDlg::OnBnClickedBtnVerify)
 END_MESSAGE_MAP()
 
 
@@ -53,6 +57,10 @@ BOOL CClientDlg::OnInitDialog()
 	//init the value of class members
 	m_sockClient=INVALID_SOCKET;
 	m_bConnect=false;
+	memset(m_szFileSpec,0,256);
+	//----RSA related  begin-----
+	m_nK=Integer(128);
+	//----RSA related  end-------
 	//init icon
 	//m_hIconClient=AfxGetApp()->LoadIcon(IDI_ICON_CLIENT);//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!--use this in ConnServerDlg
 	//SetIcon(m_hIconClient,false);
@@ -144,7 +152,7 @@ void CClientDlg::OnBnClickedRadioRecv()
 bool CClientDlg::CreateAndConn(char* szAddr,unsigned int nPort)
 {
 	//Notice: in general,CREATE only once,but CONNECT and ShutConn can act many times
-	//but here,i BIND them together(Aother Question:?closesocket()关闭,但删除socket了吗)
+	//but here,i BIND them together(Another Question:?closesocket()关闭,但删除socket了吗)
 	if(m_sockClient==INVALID_SOCKET)
 	{
 		//create
@@ -158,7 +166,7 @@ bool CClientDlg::CreateAndConn(char* szAddr,unsigned int nPort)
 			return false;
 		//leave out ::bind() can actually work.
 		//padding the server addr
-		sockaddr_in sinServer;;
+		sockaddr_in sinServer;
 		sinServer.sin_addr.S_un.S_addr=uAddr;
 		sinServer.sin_family=AF_INET;
 		sinServer.sin_port=htons(nPort);
@@ -180,8 +188,8 @@ void CClientDlg::ShutConn()
 			::closesocket(m_sockClient);
 			m_sockClient=INVALID_SOCKET;
 			m_bConnect=false;
-			//----!!!!!!!!!!!!!!!!!!!!!!!!!!!!相关控件------------
-			m_barClient.SetText(L"网络状态:  未连接",0,0);
+			if(m_barClient)
+				m_barClient.SetText(L"网络状态:  未连接",0,0);
 		}
 	}
 }
@@ -242,8 +250,48 @@ long CClientDlg::OnSocket(WPARAM wParam,LPARAM lParam)
 			//recv the net-data directly
 			char szText[1024]={0};
 			::recv(s,szText,1024,0);
-			//judge the msg type
-			//if(strcmp(szText))
+			//judge the msg type by extracting the heading string
+			if(strncmp(szText,"backe:",6)==0)
+			{
+				//去掉报头"backe:",直接改变指针
+				char* pszText=szText;
+				pszText=&szText[6];
+				wchar_t wszText[1024]={0};
+				MultiByteToWideChar(CP_ACP,0,pszText,-1,wszText,1024);
+				SetDlgItemText(IDC_E_PUB,wszText);
+				//extract m_nE,m_nN
+				char* pTmp=NULL;
+				if(pTmp=strtok(pszText,"\r\n"))
+				{
+					//set m_nE
+					m_nE=Integer(pTmp);
+					if(pTmp=strtok(NULL,""))
+					{
+						//set m_nN
+						m_nN=Integer(pTmp);
+					}
+					else
+					{
+						MessageBox(L"大整数N解析失败!",L"错误",MB_OK);
+						return 0;
+					}
+				}
+				else
+				{
+					MessageBox(L"公钥e解析失败!",L"错误",MB_OK);
+					return 0;
+				}
+			}
+			//Other type msg processing..
+			else if(strncmp(szText,"backsign:",9)==0)
+			{
+				//wipe out "backsign:" and set m_nSs
+				char* pszText=szText;
+				pszText=&szText[9];
+				m_nSs=Integer(pszText);
+				//disp on UI
+				SetDlgItemText(IDC_E_RECVSTATE,L"成功接收盲签名!");
+			}
 		}
 		break;
 	case FD_CLOSE:
@@ -254,7 +302,8 @@ long CClientDlg::OnSocket(WPARAM wParam,LPARAM lParam)
 				::closesocket(m_sockClient);
 				m_sockClient=INVALID_SOCKET;
 				m_bConnect=false;
-				m_barClient.SetText(L"网络状态:  未连接",0,0);
+				if(m_barClient)
+					m_barClient.SetText(L"网络状态:  未连接",0,0);
 			}
 		}
 		break;
@@ -278,11 +327,115 @@ void CClientDlg::OnBnClickedBtnGetp()
 
 void CClientDlg::OnBnClickedBtnAsk()
 {
-	//--TEMP:imitate the real process
-	if(m_bConnect && m_sockClient!=INVALID_SOCKET)
+	//因为用用到公钥e加密盲化消息
+	if(m_nE.IsZero()||m_nN.IsZero())
 	{
-		::send(m_sockClient,"ask4sign\r\n",15,0);
+		MessageBox(L"公钥e的值不可为0!",L"错误",MB_OK);
+		return;
+	}
+	//First check if set m_szFileSpec
+	if(strcmp(m_szFileSpec,"")!=0)
+	{
+		CalcMd5ForFile(m_szFileSpec,m_strMd5Spec);
+
+		if(m_bConnect && m_sockClient!=INVALID_SOCKET)
+		{
+			//blind the MessageDigest
+			Integer fm(m_strMd5Spec.c_str());
+			Integer mb=a_exp_b_mod_c(m_nK,m_nE,m_nN);
+			mb=mb*fm%m_nN;
+			//mb-->char
+			stringstream sstream;
+			char szTmp[512]={0};
+			sstream<<hex<<mb;
+			sstream>>szTmp;
+			//padding szText;Format: ask4sign(+m_strMd5Spec)
+			char szText[1024]={0};
+			strncat(szText,"ask4sign",10);
+			strncat(szText,szTmp,512);
+			::send(m_sockClient,szText,1024,0);
+		}
+		else
+			MessageBox(L"尚未与签名方建立连接.",L"错误",MB_OK);
 	}
 	else
-		MessageBox(L"尚未与签名方建立连接.",L"错误",MB_OK);
+		MessageBox(L"没有选中文档!",L"错误",MB_OK);
+}
+
+void CClientDlg::CalcMd5ForFile(char* szFileName,string& strMd5)
+{
+	MD5 hash;
+	byte buffer[2*MD5::DIGESTSIZE];
+	FileSource(szFileName,true,new HashFilter(hash,new HexEncoder(new ArraySink(buffer,2*MD5::DIGESTSIZE))));
+	string str_md5((const char*)buffer,2*MD5::DIGESTSIZE);
+	strMd5=str_md5;
+}
+
+void CClientDlg::OnBnClickedBtnOpenfile()
+{
+	//open the file to be signed
+	wchar_t szOpenFile[MAX_PATH]={0};
+
+	OPENFILENAME OpenFile={0};
+	OpenFile.lStructSize=sizeof(OpenFile);
+	OpenFile.lpstrFile=szOpenFile;
+	OpenFile.nMaxFile=MAX_PATH;
+	OpenFile.lpstrFilter=L"Text Files(*.txt)\0*.txt\0All Files(*.*)\0*.*\0\0";
+	OpenFile.nFilterIndex=1;
+	if(::GetOpenFileName(&OpenFile))
+	{
+		//UpdateData(false)
+		SetDlgItemText(IDC_E_OPENFILE,szOpenFile);
+		//set the m_szFileSpec
+		WideCharToMultiByte(CP_ACP,0,szOpenFile,-1,m_szFileSpec,256,NULL,NULL);
+	}
+}
+
+
+void CClientDlg::OnBnClickedBtnUnblind()
+{
+	if(m_nN.IsZero())
+	{
+		MessageBox(L"检测到大整数N为0!",L"错误",MB_OK);
+		return;
+	}
+	//s=s'/k (+..n)
+	int i=0;
+	for(;i<1000000;i++)
+	{
+		if(m_nSs%m_nK==0)
+			break;
+		m_nSs+=m_nN;
+	}
+	if(i==1000000)
+	{
+		MessageBox(L"给收到的签名去盲失败!",L"错误",MB_OK);
+		return;
+	}
+	m_nS=m_nSs/m_nK;
+	//disp on UI
+	stringstream sstream;
+	char szTmp[512]={0};
+	wchar_t wszTmp[512]={0};
+	sstream<<hex<<m_nS;
+	sstream>>szTmp;
+	MultiByteToWideChar(CP_ACP,0,szTmp,-1,wszTmp,512);
+	SetDlgItemText(IDC_E_UNBLIND,wszTmp);
+}
+
+
+void CClientDlg::OnBnClickedBtnVerify()
+{
+	if(m_nE.IsZero()||m_nN.IsZero())
+	{
+		MessageBox(L"检测到公钥E或大整数N为0!",L"错误",MB_OK);
+		return;
+	}
+	Integer fm(m_strMd5Spec.c_str());
+	if(fm%m_nN == a_exp_b_mod_c(m_nS,m_nE,m_nN))
+	{
+		SetDlgItemText(IDC_E_VERIFY,L"身份验证成功,签名是有效的.");
+	}
+	else
+		SetDlgItemText(IDC_E_VERIFY,L"身份验证失败,签名是无效.");
 }

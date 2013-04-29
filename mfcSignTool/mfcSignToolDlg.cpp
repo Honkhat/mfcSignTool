@@ -263,6 +263,7 @@ void CmfcSignToolDlg::OnShutserv()
 		m_dlgServer.CloseAllSocket();
 		m_dlgServer.m_bService=false;
 		m_dlgServer.GetDlgItem(IDC_BTN_OPENSERV)->EnableWindow(true);
+		m_dlgServer.GetDlgItem(IDC_BTN_RANDGEN)->EnableWindow(true);
 	}
 	else
 		if(m_bSignMode)
@@ -309,6 +310,7 @@ void CmfcSignToolDlg::OnConnsvr()
 		//pop up the ConnSvr dlg
 		if(IDOK == m_dlgConnSvr.DoModal())
 		{
+			m_dlgClient.m_barClient.SetText(L"网络状态:  正在连接..",0,0);
 			m_dlgClient.CreateAndConn(m_dlgConnSvr.m_szIpSvr,m_dlgConnSvr.m_nPort);
 		}
 	}

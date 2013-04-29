@@ -5,7 +5,17 @@
 #define MAX_SOCKET 56
 
 #include "SignYonDlg.h"
-
+//stringstream<<hex<<Integer
+#include <sstream>
+using namespace std;
+//16 radix(about 512 decimal radix)
+#define MAX_INT_DIGITS 430
+//---RSA related begin-----
+#include <osrng.h>
+#include <integer.h>
+#include <rsa.h>
+using namespace CryptoPP;
+//---RSA related end  -----
 // CServerDlg 对话框
 
 class CServerDlg : public CDialogEx
@@ -41,6 +51,17 @@ public:
 	CStatusBarCtrl m_barServer;
 	//服务是否已经开启
 	bool m_bService;
+	//---RSA related begin----
+	RSA::PrivateKey m_privKey;
+	Integer m_rsaE;//public key
+	char    m_szE[MAX_INT_DIGITS];
+	Integer m_rsaD;//private key
+	Integer m_rsaN;//N=E*D
+	char    m_szN[MAX_INT_DIGITS];
+	Integer m_rsaP;//Big Prim 1
+	Integer m_rsaQ;//Big Prim 2
+	unsigned int m_nKeySize;//key size
+	//---RSA related end  ----
 
 	//tag:直接创建不判断是否已经创建
 	bool CreateAndListen(int nPort);
@@ -48,7 +69,7 @@ public:
 	void CloseAllSocket();
 	//tag:添加之前判断是否超过m_nMaxSocket
 	bool AddClient(SOCKET s);
-	//tag:删除以前判断是否有效
+	//tag:删除之前判断是否有效
 	void RemoveClient(SOCKET s);
 
 	//---vital----------
@@ -56,4 +77,5 @@ public:
 	//---vital----------
 	afx_msg void OnBnClickedBtnOpenserv();
 	virtual BOOL OnInitDialog();
+	afx_msg void OnBnClickedBtnRandgen();
 };
