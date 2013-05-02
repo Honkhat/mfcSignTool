@@ -80,6 +80,18 @@ BEGIN_MESSAGE_MAP(CmfcSignToolDlg, CDialogEx)
 	ON_COMMAND(ID_MENU_ASKMODE, &CmfcSignToolDlg::OnMenuAskmode)
 	ON_COMMAND(ID_MENU_SIGN_MODE, &CmfcSignToolDlg::OnMenuSignMode)
 	ON_COMMAND(ID_MENU_DEMO, &CmfcSignToolDlg::OnMenuDemo)
+	ON_COMMAND(ID_MENU_RSAVAR, &CmfcSignToolDlg::OnMenuRsavar)
+	ON_COMMAND(ID_MENU_PEERINFO, &CmfcSignToolDlg::OnMenuPeerInfo)
+	ON_COMMAND(ID_MENU_SELFINFO, &CmfcSignToolDlg::OnMenuSelfinfo)
+	ON_COMMAND(ID_MENU_BSIGN, &CmfcSignToolDlg::OnMenuBSign)
+	ON_COMMAND(ID_MENU_SOCKVAR, &CmfcSignToolDlg::OnMenuSockvar)
+	ON_COMMAND(ID_MENU_SETRSAVAR, &CmfcSignToolDlg::OnMenuSetRsaVar)
+	ON_COMMAND(ID_MENU_SETBSVAR, &CmfcSignToolDlg::OnMenuSetbsvar)
+	ON_COMMAND(ID_MENU_SETSOCKVAR, &CmfcSignToolDlg::OnMenuSetsockvar)
+	ON_COMMAND(ID_32793, &CmfcSignToolDlg::On32793)
+	ON_COMMAND(ID_32794, &CmfcSignToolDlg::On32794)
+	ON_COMMAND(ID_MENU_CLIENTLIST, &CmfcSignToolDlg::OnMenuClientList)
+	ON_COMMAND(ID_32783, &CmfcSignToolDlg::OnHowToUse)
 END_MESSAGE_MAP()
 
 
@@ -319,6 +331,10 @@ void CmfcSignToolDlg::OnConnsvr()
 			m_dlgClient.m_barClient.SetText(L"网络状态:  正在连接..",0,0);
 			m_dlgClient.CreateAndConn(m_dlgConnSvr.m_szIpSvr,m_dlgConnSvr.m_nPort);
 		}
+		//clear client RecvState EditCtrl
+		m_dlgClient.SetDlgItemTextW(IDC_E_RECVSTATE,L"");
+		m_dlgClient.SetDlgItemTextW(IDC_E_UNBLIND,L"");
+		m_dlgClient.SetDlgItemTextW(IDC_E_VERIFY,L"");
 	}
 	else if(m_bSignMode)
 		MessageBox(L"当前模式不是签名请求模式!",L"错误",MB_OK);
@@ -415,4 +431,309 @@ void CmfcSignToolDlg::OnMenuDemo()
 	ShExecInfo.nShow = SW_SHOW;
 	ShExecInfo.hInstApp = NULL;
 	ShellExecuteEx(&ShExecInfo);
+}
+
+
+void CmfcSignToolDlg::OnMenuRsavar()
+{
+	if(!m_bSignMode)
+	{
+		MessageBox(L"只有签名方有权限查看RSA参数!",L"错误",MB_OK);
+		return;
+	}
+	//Integer-->char(m_szE,m_szN is available)
+	stringstream sstream;
+	char szP[430]={0};
+	sstream<<hex<<m_dlgServer.m_rsaP;
+	sstream>>szP;
+	char szQ[430]={0};
+	sstream.clear();
+	sstream<<hex<<m_dlgServer.m_rsaQ;
+	sstream>>szQ;
+	char szD[430]={0};
+	sstream.clear();
+	sstream<<hex<<m_dlgServer.m_rsaD;
+	sstream>>szD;
+	//convery the value to RsaVarDlg
+	CRsaVarDlg dlg;
+	dlg.SetUiText(szP,szQ,m_dlgServer.m_szN,m_dlgServer.m_szE,szD);
+	dlg.DoModal();
+}
+
+
+void CmfcSignToolDlg::OnMenuPeerInfo()
+{
+	//only apply to CLIENT mode;if server,should use "ClientList" menu
+	if(m_bSignMode)
+	{
+		MessageBox(L"该按钮只对签名请求方有效;\n签名方请点击\"客户列表\"",L"错误",MB_OK);
+		return;
+	}
+	//only work when CONNECTED
+	if(!m_dlgClient.m_bConnect)
+	{
+		MessageBox(L"抱歉,您还没有连接到签名方..",L"错误",MB_OK);
+		return;
+	}
+	//
+	sockaddr_in sinServer;
+	int nSinLen=sizeof(sinServer);
+	memset(&sinServer,0,nSinLen);
+	::getpeername(m_dlgClient.m_sockClient,(sockaddr*)&sinServer,&nSinLen);
+	//获取主机字节顺序的端口号
+	int nPeerPort=::ntohs(sinServer.sin_port);
+	char szPeerPort[10]={0};
+	itoa(nPeerPort,szPeerPort,10);//3rd argu:radix
+	//获取主机字节顺序的IP
+	char* pchPeerIp=new char[20];
+	pchPeerIp=::inet_ntoa(sinServer.sin_addr);
+	//--获取对方的主机名--
+	//获取网络字节顺序的char ip
+	DWORD dwIp=::inet_addr(pchPeerIp);
+	HOSTENT* pHost=::gethostbyaddr((LPSTR)&dwIp,4,AF_INET);
+	char szHostName[50]={0};
+	memcpy(szHostName,pHost->h_name,50);
+	//--获取对方主机名结束--
+	//popup the PeerInfoDlg
+	CPeerInfoDlg dlg;
+	dlg.setUiText(pchPeerIp,szPeerPort,szHostName);
+	dlg.DoModal();
+}
+
+
+void CmfcSignToolDlg::OnMenuSelfinfo()
+{
+	//stream<<system("hostname");
+	//replace dlg with the simplest MessageBox
+	//already have: m_szHostIp, m_szHostName
+    sockaddr_in sinLocal;
+	int nSinLen=sizeof(sinLocal);
+	if(m_bSignMode)
+		::getsockname(m_dlgServer.m_sockServer,(sockaddr*)&sinLocal,&nSinLen);
+	else
+		::getsockname(m_dlgClient.m_sockClient,(sockaddr*)&sinLocal,&nSinLen);
+	//get addr family type;MUST be AF_INET
+	short nAddrType=sinLocal.sin_family;
+	char szAddrType[10]={0};
+	if(nAddrType==2)
+		memcpy(szAddrType,"AF_INET",10);
+	else
+		memcpy(szAddrType,"(未联网)",10);
+	//get the binding port
+	char szPort[10]={0};
+	unsigned short nPort=sinLocal.sin_port;
+	itoa(nPort,szPort,10);
+	//combine together
+	CString csTmp;
+	csTmp+="地址家族:  ";
+	csTmp+=szAddrType;
+	csTmp+="\n";
+	csTmp+="本地IP:    ";
+	csTmp+=m_szHostIp;
+	csTmp+="\n";
+	csTmp+="使用端口:  ";
+	csTmp+=szPort;
+	csTmp+="\n";
+	csTmp+="主机名:    ";
+	csTmp+=m_szHostName;
+	MessageBox(csTmp,L"本机信息",MB_OK);
+}
+
+
+void CmfcSignToolDlg::OnMenuBSign()
+{
+	//only work in CLIENT mode
+	if(m_bSignMode)
+	{
+		MessageBox(L"签名方无权限!",L"错误",MB_OK);
+		return;
+	}
+	//show Bind Func and Blind Factor k
+	stringstream sstream;
+	sstream<<hex<<m_dlgClient.m_nK;
+	char szK[10]={0};
+	sstream>>szK;
+	CString csTmp;
+	csTmp+="盲化函数:  消息摘要(MD5)\n";
+	csTmp+="盲化因子:  ";
+	csTmp+=szK;
+	MessageBox(csTmp,L"盲签名相关参数",MB_OK);
+}
+
+
+void CmfcSignToolDlg::OnMenuSockvar()
+{
+	//m_nBackLog m_nMaxSocket;only work in SERVER mode 
+	if(!m_bSignMode)
+	{
+		MessageBox(L"签名请求方没有此信息.",L"ERROR",MB_OK);
+		return;
+	}
+	char szBacklog[5]={0};
+	itoa(m_dlgServer.m_nBacklog,szBacklog,10);
+	char szMaxClient[5]={0};
+	itoa(m_dlgServer.m_nMaxSocket,szMaxClient,10);
+	CString csTmp;
+	csTmp+="backlog:     ";
+	csTmp+=szBacklog;
+	csTmp+="\n";
+	csTmp+="最大连接数:  ";
+	csTmp+="56\n";
+	csTmp+="使用端口:    ";
+	char szPort[10]={0};
+	itoa(m_dlgServer.m_nPort,szPort,10);
+	csTmp+=szPort;
+	MessageBox(csTmp,L"WinSock相关信息",MB_OK);
+}
+
+
+void CmfcSignToolDlg::OnMenuSetRsaVar()
+{
+	if(!m_bSignMode)
+	{
+		MessageBox(L"签名请求方无权限!",L"ERROR",MB_OK);
+		return;
+	}
+	CSetRsaVarDlg dlg;
+	if(IDOK == dlg.DoModal())
+	{
+		//(e,d)already validate
+		m_dlgServer.m_rsaE=dlg.m_intSetE;
+		m_dlgServer.m_rsaD=dlg.m_intSetD;
+		m_dlgServer.m_rsaN=dlg.m_intSetN;
+		//后面顺带着也传值给m_dlgServer.m_szE/N
+		//disp on UI
+		char szTmp[430]={0};
+		wchar_t wszTmp[430]={0};
+		stringstream sstream;
+		sstream<<hex<<dlg.m_intSetE;
+		sstream>>szTmp;
+		memcpy(m_dlgServer.m_szE,szTmp,430);
+		MultiByteToWideChar(CP_ACP,0,szTmp,-1,wszTmp,430);
+		m_dlgServer.SetDlgItemTextW(IDC_E_PUB,wszTmp);
+
+		sstream.clear();
+		memset(szTmp,0,430);
+		memset(wszTmp,0,430);
+		sstream<<hex<<dlg.m_intSetD;
+		sstream>>szTmp;
+		MultiByteToWideChar(CP_ACP,0,szTmp,-1,wszTmp,430);
+		m_dlgServer.SetDlgItemTextW(IDC_E_PRIV,wszTmp);
+
+		sstream.clear();
+		memset(szTmp,0,430);
+		sstream<<hex<<dlg.m_intSetN;
+		sstream>>szTmp;
+		memcpy(m_dlgServer.m_szN,szTmp,430);
+
+		sstream.clear();
+	}
+}
+
+
+void CmfcSignToolDlg::OnMenuSetbsvar()
+{
+	if(m_bSignMode)
+	{
+		MessageBox(L"签名方无权限!",L"ERROR",MB_OK);
+		return;
+	}
+	CSetBsVarDlg dlg;
+	if(IDOK == dlg.DoModal())
+	{
+		m_dlgClient.m_nK=dlg.m_nSetK;
+	}
+}
+
+
+void CmfcSignToolDlg::OnMenuSetsockvar()
+{
+	//only work in SERVER mode
+	if(!m_bSignMode)
+	{
+		MessageBox(L"签名请求方无需设置!",L"ERROR",MB_OK);
+		return;
+	}
+	CSetSockVarDlg dlg;
+	if(IDOK==dlg.DoModal())
+	{
+		m_dlgServer.m_nBacklog=dlg.m_nSetBacklog;
+		m_dlgServer.m_nMaxSocket=dlg.m_nSetMaxClient;
+		m_dlgServer.m_nPort=dlg.m_nSetPort;
+	}
+}
+
+
+void CmfcSignToolDlg::On32793()
+{
+	CMd5ToolDlg* pDlg=new CMd5ToolDlg;
+	pDlg->Create(IDD_DLG_MD5TOOL,this);
+	pDlg->ShowWindow(true);
+}
+
+
+void CmfcSignToolDlg::On32794()
+{
+	CAesToolDlg* pDlg=new CAesToolDlg;
+	pDlg->Create(IDD_DLG_AESTOOL,this);
+	pDlg->ShowWindow(true);
+}
+
+
+void CmfcSignToolDlg::OnMenuClientList()
+{
+	if(!m_bSignMode)
+	{
+		MessageBox(L"签名请求方无此数据!",L"ERROR",MB_OK);
+		return;
+	}
+
+	CClientListDlg* pDlg=new CClientListDlg;
+	//clear vector before using it
+	(pDlg->m_vecClient).clear();
+	//using m_dlgServer.m_arClient
+	int nLen=m_dlgServer.m_nClient;
+
+	for(int i=0;i<nLen;i++)
+	{
+		//peer对方的IP、端口号、主机名
+		sockaddr_in sinClient;
+		int nSinLen=sizeof(sinClient);
+		memset(&sinClient,0,nSinLen);
+		::getpeername(m_dlgServer.m_arClient[i],(sockaddr*)&sinClient,&nSinLen);
+		//获取主机字节顺序的端口号
+		int nPeerPort=::ntohs(sinClient.sin_port);
+		char szPeerPort[10]={0};
+		wchar_t wszPeerPort[20]={0};
+		itoa(nPeerPort,szPeerPort,10);//3rd:radix
+		MultiByteToWideChar(CP_ACP,0,szPeerPort,-1,wszPeerPort,10);
+		//获取主机字节顺序的IP
+		char* szPeerIp=new char[20];
+		wchar_t wszPeerIp[40]={0};
+		szPeerIp=::inet_ntoa(sinClient.sin_addr);
+		MultiByteToWideChar(CP_ACP,0,szPeerIp,-1,wszPeerIp,20);
+		//--获取对方的主机名--
+		//获取网络字节顺序的char ip
+		DWORD dwIp=::inet_addr(szPeerIp);
+		HOSTENT* pHost=::gethostbyaddr((LPSTR)&dwIp,4,AF_INET);
+		char szHostName[50]={0};
+		wchar_t wszHostName[100]={0};
+		memcpy(szHostName,pHost->h_name,50);
+		MultiByteToWideChar(CP_ACP,0,szHostName,-1,wszHostName,50);
+
+		//give values to ClientListDlg
+		pDlg->SetListVec(L"AF_INET",wszPeerIp,wszPeerPort,wszHostName);
+		
+	}
+
+	pDlg->Create(IDD_DLG_CLIENTLIST,this);
+	pDlg->ShowWindow(true);
+}
+
+
+void CmfcSignToolDlg::OnHowToUse()
+{
+	CHowDlg* pDlg=new CHowDlg;
+	pDlg->Create(IDD_DLG_HOW,this);
+	pDlg->ShowWindow(true);
 }

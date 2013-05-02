@@ -228,30 +228,31 @@ long CServerDlg::OnSocket(WPARAM wParam,LPARAM lParam)
 			else if(strncmp(szText,"ask4sign",8)==0)
 			{
 				//peer对方的IP、端口号、主机名
-				sockaddr_in sinClient;
-				int nSinLen=sizeof(sinClient);
-				memset(&sinClient,0,nSinLen);
-				::getpeername(s,(sockaddr*)&sinClient,&nSinLen);
+				//sockaddr_in sinClient;
+				//int nSinLen=sizeof(sinClient);
+				//memset(&sinClient,0,nSinLen);
+				//::getpeername(s,(sockaddr*)&sinClient,&nSinLen);
 				//获取主机字节顺序的端口号
-				int nPeerPort=::ntohs(sinClient.sin_port);
-				char szPeerPort[10]={0};
-				itoa(nPeerPort,szPeerPort,10);//3rd:radix
+				//int nPeerPort=::ntohs(sinClient.sin_port);
+				//char szPeerPort[10]={0};
+				//itoa(nPeerPort,szPeerPort,10);//3rd:radix
 				//获取主机字节顺序的IP
-				char* pchPeerIp=new char[20];
-				pchPeerIp=::inet_ntoa(sinClient.sin_addr);
+				//char* pchPeerIp=new char[20];
+				//pchPeerIp=::inet_ntoa(sinClient.sin_addr);
 				//--获取对方的主机名--
-				//获取网络字节顺序的char ip
-				DWORD dwIp=::inet_addr(pchPeerIp);
-				HOSTENT* pHost=::gethostbyaddr((LPSTR)&dwIp,4,AF_INET);
-				char szHostName[50]={0};
-				memcpy(szHostName,pHost->h_name,50);
+				///获取网络字节顺序的char ip
+				//DWORD dwIp=::inet_addr(pchPeerIp);
+				//HOSTENT* pHost=::gethostbyaddr((LPSTR)&dwIp,4,AF_INET);
+				//char szHostName[50]={0};
+				//memcpy(szHostName,pHost->h_name,50);
 				//process szText: wipe out "ask4sign"
 				char* pszText=szText;
 				pszText=&szText[8];
 				//popup the SignAgreeDlg and send these values to it
-				m_dlgSignYon.SetUiText(pchPeerIp,szPeerPort,szHostName,pszText);
+				//m_dlgSignYon.SetUiText(pchPeerIp,szPeerPort,szHostName,pszText);
 				
-				if(IDOK == m_dlgSignYon.DoModal())
+				//注释掉是为了不阻塞socket，直接同意签名
+				//if(IDOK == m_dlgSignYon.DoModal())
 				{
 					//sign the md5 and sendback
 					Integer mb(pszText);

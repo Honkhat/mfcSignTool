@@ -7,6 +7,15 @@
 #include "ClientDlg.h"
 #include "ServerDlg.h"
 #include "ConnSvr.h"
+#include "RsaVarDlg.h"
+#include "PeerInfoDlg.h"
+#include "SetRsaVarDlg.h"
+#include "SetBsVarDlg.h"
+#include "SetSockVarDlg.h"
+#include "Md5ToolDlg.h"
+#include "AesToolDlg.h"
+#include "ClientListDlg.h"
+#include "HowDlg.h"
 //include winsock related files
 #include <WinSock2.h>
 #pragma comment(lib,"WS2_32.lib")
@@ -66,4 +75,16 @@ public:
 	afx_msg void OnMenuAskmode();
 	afx_msg void OnMenuSignMode();
 	afx_msg void OnMenuDemo();
+	afx_msg void OnMenuRsavar();
+	afx_msg void OnMenuPeerInfo();
+	afx_msg void OnMenuSelfinfo();
+	afx_msg void OnMenuBSign();
+	afx_msg void OnMenuSockvar();
+	afx_msg void OnMenuSetRsaVar();
+	afx_msg void OnMenuSetbsvar();
+	afx_msg void OnMenuSetsockvar();
+	afx_msg void On32793();
+	afx_msg void On32794();
+	afx_msg void OnMenuClientList();
+	afx_msg void OnHowToUse();
 };

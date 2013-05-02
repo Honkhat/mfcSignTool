@@ -56,7 +56,7 @@ public:
 	Integer m_rsaE;//public key
 	char    m_szE[MAX_INT_DIGITS];
 	Integer m_rsaD;//private key
-	Integer m_rsaN;//N=E*D
+	Integer m_rsaN;//N=P*Q
 	char    m_szN[MAX_INT_DIGITS];
 	Integer m_rsaP;//Big Prim 1
 	Integer m_rsaQ;//Big Prim 2
