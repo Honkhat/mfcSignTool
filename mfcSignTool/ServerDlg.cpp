@@ -98,7 +98,7 @@ BOOL CServerDlg::OnInitDialog()
 	m_nClient=0;
 	m_bService=false;
 	//-----RSA related begin----
-	m_nKeySize=128;
+	m_nKeySize=512;
 	memset(m_szE,0,MAX_INT_DIGITS);
 	memset(m_szN,0,MAX_INT_DIGITS);
 
