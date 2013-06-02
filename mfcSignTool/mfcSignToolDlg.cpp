@@ -443,14 +443,14 @@ void CmfcSignToolDlg::OnMenuRsavar()
 	}
 	//Integer-->char(m_szE,m_szN is available)
 	stringstream sstream;
-	char szP[430]={0};
+	char szP[MAX_HEX_DIGITS]={0};
 	sstream<<hex<<m_dlgServer.m_rsaP;
 	sstream>>szP;
-	char szQ[430]={0};
+	char szQ[MAX_HEX_DIGITS]={0};
 	sstream.clear();
 	sstream<<hex<<m_dlgServer.m_rsaQ;
 	sstream>>szQ;
-	char szD[430]={0};
+	char szD[MAX_HEX_DIGITS]={0};
 	sstream.clear();
 	sstream<<hex<<m_dlgServer.m_rsaD;
 	sstream>>szD;
@@ -603,28 +603,28 @@ void CmfcSignToolDlg::OnMenuSetRsaVar()
 		m_dlgServer.m_rsaN=dlg.m_intSetN;
 		//后面顺带着也传值给m_dlgServer.m_szE/N
 		//disp on UI
-		char szTmp[430]={0};
-		wchar_t wszTmp[430]={0};
+		char szTmp[MAX_HEX_DIGITS]={0};
+		wchar_t wszTmp[MAX_HEX_DIGITS]={0};
 		stringstream sstream;
 		sstream<<hex<<dlg.m_intSetE;
 		sstream>>szTmp;
-		memcpy(m_dlgServer.m_szE,szTmp,430);
-		MultiByteToWideChar(CP_ACP,0,szTmp,-1,wszTmp,430);
+		memcpy(m_dlgServer.m_szE,szTmp,MAX_HEX_DIGITS);
+		MultiByteToWideChar(CP_ACP,0,szTmp,-1,wszTmp,MAX_HEX_DIGITS);
 		m_dlgServer.SetDlgItemTextW(IDC_E_PUB,wszTmp);
 
 		sstream.clear();
-		memset(szTmp,0,430);
-		memset(wszTmp,0,430);
+		memset(szTmp,0,MAX_HEX_DIGITS);
+		memset(wszTmp,0,MAX_HEX_DIGITS);
 		sstream<<hex<<dlg.m_intSetD;
 		sstream>>szTmp;
-		MultiByteToWideChar(CP_ACP,0,szTmp,-1,wszTmp,430);
+		MultiByteToWideChar(CP_ACP,0,szTmp,-1,wszTmp,MAX_HEX_DIGITS);
 		m_dlgServer.SetDlgItemTextW(IDC_E_PRIV,wszTmp);
 
 		sstream.clear();
-		memset(szTmp,0,430);
+		memset(szTmp,0,MAX_HEX_DIGITS);
 		sstream<<hex<<dlg.m_intSetN;
 		sstream>>szTmp;
-		memcpy(m_dlgServer.m_szN,szTmp,430);
+		memcpy(m_dlgServer.m_szN,szTmp,MAX_HEX_DIGITS);
 
 		sstream.clear();
 	}

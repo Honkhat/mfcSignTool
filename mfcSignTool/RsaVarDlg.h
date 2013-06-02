@@ -1,6 +1,6 @@
 #pragma once
 
-
+#define MAX_HEX_DIGITS 520
 // CRsaVarDlg 对话框
 
 class CRsaVarDlg : public CDialogEx
@@ -18,11 +18,11 @@ protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 支持
 
 	DECLARE_MESSAGE_MAP()
-	char m_szVarP[430];
-	char m_szVarQ[256];
-	char m_szVarN[430];
-	char m_szVarE[430];
-	char m_szVarD[430];
+	char m_szVarP[MAX_HEX_DIGITS];
+	char m_szVarQ[MAX_HEX_DIGITS];
+	char m_szVarN[MAX_HEX_DIGITS];
+	char m_szVarE[MAX_HEX_DIGITS];
+	char m_szVarD[MAX_HEX_DIGITS];
 	
 public:
 	virtual BOOL OnInitDialog();

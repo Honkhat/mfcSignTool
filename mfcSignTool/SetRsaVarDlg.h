@@ -4,6 +4,7 @@
 using CryptoPP::Integer;
 using CryptoPP::a_exp_b_mod_c;
 // CSetRsaVarDlg ¶Ô»°¿ò
+#define MAX_HEX_DIGITS 520//for 2048 binary bits
 
 class CSetRsaVarDlg : public CDialogEx
 {

@@ -47,16 +47,16 @@ void CSetRsaVarDlg::OnBnClickedOk()
 	//UpdateData(true) before close
 	UpdateData(true);
 	//validate
-	char szTmp[430]={0};
-	WideCharToMultiByte(CP_ACP,0,m_setn.GetString(),-1,szTmp,430,NULL,NULL);
+	char szTmp[MAX_HEX_DIGITS]={0};
+	WideCharToMultiByte(CP_ACP,0,m_setn.GetString(),-1,szTmp,MAX_HEX_DIGITS,NULL,NULL);
 	m_intSetN=Integer(szTmp);
 
-	memset(szTmp,0,430);
-	WideCharToMultiByte(CP_ACP,0,m_sete.GetString(),-1,szTmp,430,NULL,NULL);
+	memset(szTmp,0,MAX_HEX_DIGITS);
+	WideCharToMultiByte(CP_ACP,0,m_sete.GetString(),-1,szTmp,MAX_HEX_DIGITS,NULL,NULL);
 	m_intSetE=Integer(szTmp);
 
-	memset(szTmp,0,430);
-	WideCharToMultiByte(CP_ACP,0,m_setd.GetString(),-1,szTmp,430,NULL,NULL);
+	memset(szTmp,0,MAX_HEX_DIGITS);
+	WideCharToMultiByte(CP_ACP,0,m_setd.GetString(),-1,szTmp,MAX_HEX_DIGITS,NULL,NULL);
     m_intSetD=Integer(szTmp);
 
 	Integer nTest(100);

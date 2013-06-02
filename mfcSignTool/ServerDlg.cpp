@@ -98,7 +98,7 @@ BOOL CServerDlg::OnInitDialog()
 	m_nClient=0;
 	m_bService=false;
 	//-----RSA related begin----
-	m_nKeySize=512;
+	m_nKeySize=2048;
 	memset(m_szE,0,MAX_INT_DIGITS);
 	memset(m_szN,0,MAX_INT_DIGITS);
 
@@ -260,12 +260,12 @@ long CServerDlg::OnSocket(WPARAM wParam,LPARAM lParam)
 					//Integer-->char
 					stringstream sstream;
 					char szText[1024]={0};
-					char szTmp[512]={0};
+					char szTmp[520]={0};
 					sstream<<hex<<ss;
 					sstream>>szTmp;
 					//padding szText;Format: backsign:(+sign)
 					strncat(szText,"backsign:",10);
-					strncat(szText,szTmp,512);
+					strncat(szText,szTmp,520);
 					::send(s,szText,1024,0);
 				}
 			}

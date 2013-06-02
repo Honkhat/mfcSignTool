@@ -23,6 +23,8 @@
 #include <ShlObj.h>
 #include <fstream>
 
+#define MAX_HEX_DIGITS 520//for 2048 binary bits
+
 // CmfcSignToolDlg ¶Ô»°¿ò
 class CmfcSignToolDlg : public CDialogEx
 {

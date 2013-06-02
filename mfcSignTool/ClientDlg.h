@@ -44,7 +44,7 @@ public:
 	bool m_bConnect;
 	//--md5 related begin--
 	//the doc name that md5 for
-	char m_szFileSpec[256];
+	char m_szFileSpec[MAX_PATH];
 	//the md5
 	string m_strMd5Spec;   //md5 value for m_szFileSpec
 	Integer m_nK;          //blind factor

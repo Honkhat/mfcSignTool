@@ -55,4 +55,5 @@
 #endif
 #endif
 
-
+//self-defined global variables
+//#define NET_MSG_LEN  1024

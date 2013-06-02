@@ -57,7 +57,7 @@ BOOL CClientDlg::OnInitDialog()
 	//init the value of class members
 	m_sockClient=INVALID_SOCKET;
 	m_bConnect=false;
-	memset(m_szFileSpec,0,256);
+	memset(m_szFileSpec,0,MAX_PATH);
 	//----RSA related  begin-----
 	m_nK=Integer(128);
 	//----RSA related  end-------
@@ -79,7 +79,7 @@ BOOL CClientDlg::OnInitDialog()
 	GetDlgItem(IDC_E_RECVSTATE)->ShowWindow(false);
 	GetDlgItem(IDC_BTN_UNBLIND)->EnableWindow(false);
 	GetDlgItem(IDC_BTN_UNBLIND)->ShowWindow(false);
-	GetDlgItem(IDC_E_UNBLIND)->EnableWindow(false);
+	//GetDlgItem(IDC_E_UNBLIND)->EnableWindow(false);//coz:ReadOnly property
 	GetDlgItem(IDC_E_UNBLIND)->ShowWindow(false);
 	GetDlgItem(IDC_BTN_VERIFY)->EnableWindow(false);
 	GetDlgItem(IDC_BTN_VERIFY)->ShowWindow(false);
@@ -105,7 +105,7 @@ void CClientDlg::OnBnClickedRadioSend()
 	GetDlgItem(IDC_E_RECVSTATE)->ShowWindow(false);
 	GetDlgItem(IDC_BTN_UNBLIND)->EnableWindow(false);
 	GetDlgItem(IDC_BTN_UNBLIND)->ShowWindow(false);
-	GetDlgItem(IDC_E_UNBLIND)->EnableWindow(false);
+	//GetDlgItem(IDC_E_UNBLIND)->EnableWindow(false);//coz: ReadOnly property
 	GetDlgItem(IDC_E_UNBLIND)->ShowWindow(false);
 	GetDlgItem(IDC_BTN_VERIFY)->EnableWindow(false);
 	GetDlgItem(IDC_BTN_VERIFY)->ShowWindow(false);
@@ -126,7 +126,7 @@ void CClientDlg::OnBnClickedRadioSend()
 void CClientDlg::OnBnClickedRadioRecv()
 {
 	//unenable and invisible the send-mode stuff
-	GetDlgItem(IDC_E_PUB)->EnableWindow(false);
+	//GetDlgItem(IDC_E_PUB)->EnableWindow(false);
 	GetDlgItem(IDC_E_PUB)->ShowWindow(false);
 	GetDlgItem(IDC_BTN_GETP)->EnableWindow(false);
 	GetDlgItem(IDC_BTN_GETP)->ShowWindow(false);
@@ -346,13 +346,13 @@ void CClientDlg::OnBnClickedBtnAsk()
 			mb=mb*fm%m_nN;
 			//mb-->char
 			stringstream sstream;
-			char szTmp[512]={0};
+			char szTmp[520]={0};
 			sstream<<hex<<mb;
 			sstream>>szTmp;
 			//padding szText;Format: ask4sign(+m_strMd5Spec)
 			char szText[1024]={0};
 			strncat(szText,"ask4sign",10);
-			strncat(szText,szTmp,512);
+			strncat(szText,szTmp,520);
 			::send(m_sockClient,szText,1024,0);
 		}
 		else
@@ -387,7 +387,7 @@ void CClientDlg::OnBnClickedBtnOpenfile()
 		//UpdateData(false)
 		SetDlgItemText(IDC_E_OPENFILE,szOpenFile);
 		//set the m_szFileSpec
-		WideCharToMultiByte(CP_ACP,0,szOpenFile,-1,m_szFileSpec,256,NULL,NULL);
+		WideCharToMultiByte(CP_ACP,0,szOpenFile,-1,m_szFileSpec,MAX_PATH,NULL,NULL);
 	}
 }
 
@@ -415,11 +415,11 @@ void CClientDlg::OnBnClickedBtnUnblind()
 	m_nS=m_nSs/m_nK;
 	//disp on UI
 	stringstream sstream;
-	char szTmp[512]={0};
-	wchar_t wszTmp[512]={0};
+	char szTmp[520]={0};
+	wchar_t wszTmp[520]={0};
 	sstream<<hex<<m_nS;
 	sstream>>szTmp;
-	MultiByteToWideChar(CP_ACP,0,szTmp,-1,wszTmp,512);
+	MultiByteToWideChar(CP_ACP,0,szTmp,-1,wszTmp,520);
 	SetDlgItemText(IDC_E_UNBLIND,wszTmp);
 }
 

@@ -47,8 +47,8 @@ BOOL CAesToolDlg::OnInitDialog()
 	//--Initialize the values of class MEMBERS begin--
 	//default:encode mode
 	m_bEncodeMode=true;
-	memset(m_szOpenDoc,0,256);
-	memset(m_szSaveDoc,0,256);
+	memset(m_szOpenDoc,0,MAX_PATH);
+	memset(m_szSaveDoc,0,MAX_PATH);
 
 	//--Initialize the values of class MEMBERS end--
 	return TRUE;  // return TRUE unless you set the focus to a control

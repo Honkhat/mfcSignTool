@@ -9,7 +9,7 @@
 #include <sstream>
 using namespace std;
 //16 radix(about 512 decimal radix)
-#define MAX_INT_DIGITS 430
+#define MAX_INT_DIGITS 520
 //---RSA related begin-----
 #include <osrng.h>
 #include <integer.h>

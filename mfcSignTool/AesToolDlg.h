@@ -40,9 +40,9 @@ public:
 	//current mode
 	bool m_bEncodeMode;
 	//the specified file
-	char m_szOpenDoc[256];
-	char m_szSaveDoc[256];
-
+	char m_szOpenDoc[MAX_PATH];
+	char m_szSaveDoc[MAX_PATH];
+	
 	//考虑到解密的问题，随机不可行;所以使用固定初始量
 
 	virtual BOOL OnInitDialog();
